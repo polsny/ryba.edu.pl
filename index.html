@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>Wideo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+    }
+    video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(0.65);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.35);
+      }
+    }
+    .gif-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      pointer-events: none;
+      max-width: 80vw;
+      max-height: 80vh;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <video id="v" autoplay loop playsinline src="qybyha.mov"></video>
+  <img src="ryba.gif" alt="ryba" class="gif-overlay">
+
+  <script>
+    const v = document.getElementById('v');
+
+    v.volume = 1;
+    v.muted = false;
+
+    function playWithAudio() {
+      v.muted = false;
+      v.volume = 1;
+      const promise = v.play();
+      if (promise !== undefined) {
+        promise.catch(() => {
+          v.muted = true;
+          v.play();
+        });
+      }
+    }
+
+    playWithAudio();
+
+    const unblockAudio = () => {
+      if (v.muted || v.paused) {
+        v.muted = false;
+        v.volume = 1;
+        v.play();
+      }
+    };
+
+    ['pointerdown', 'mousemove', 'mouseenter', 'click', 'keydown', 'wheel', 'touchstart', 'focus'].forEach(evt => {
+      window.addEventListener(evt, unblockAudio, { passive: true });
+      document.addEventListener(evt, unblockAudio, { passive: true });
+    });
+
+    v.addEventListener('pause', () => {
+      v.play();
+    });
+
+    v.addEventListener('volumechange', () => {
+      if (v.muted) v.muted = false;
+      if (v.volume < 1) v.volume = 1;
+    });
+
+    setInterval(() => {
+      if (v.paused) v.play();
+      if (v.muted) v.muted = false;
+      if (v.volume < 1) v.volume = 1;
+    }, 50);
+
+    window.addEventListener('contextmenu', e => e.preventDefault());
+    window.addEventListener('keydown', e => {
+      e.preventDefault();
+      v.play();
+    });
+  </script>
+</body>
+</html>
