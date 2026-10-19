@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
-  <title>ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba</title>
+  <title>Wideo</title>
   <style>
     * {
       margin: 0;
@@ -19,44 +19,77 @@
       overflow: hidden;
       background: #000;
     }
-    video {
+    #player {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      overflow: hidden;
+      z-index: 1;
+      pointer-events: none;
+    }
+    #player.dvd {
+      width: 320px;
+      height: 180px;
+      max-width: 65vw;
+      max-height: 40vh;
+    }
+    video {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
       pointer-events: none;
-      z-index: 1;
     }
-    @keyframes pulse {
-      0%, 100% {
-        transform: translate(-50%, -50%) scale(0.65);
-      }
-      50% {
-        transform: translate(-50%, -50%) scale(1.35);
-      }
-    }
-    .gif-overlay {
+    #gif-box {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 2;
       pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #gif-box.dvd {
+      top: 0;
+      left: 0;
+      transform: none;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(0.65);
+      }
+      50% {
+        transform: scale(1.35);
+      }
+    }
+    .gif-overlay {
+      pointer-events: none;
       max-width: 80vw;
       max-height: 80vh;
       animation: pulse 1.5s ease-in-out infinite;
     }
+    #gif-box.dvd .gif-overlay {
+      max-width: 240px;
+      max-height: 240px;
+    }
   </style>
 </head>
 <body>
-  <video id="v" autoplay loop playsinline src="qybyha.mov"></video>
-  <img src="ryba.gif" alt="ryba" class="gif-overlay">
+  <div id="player">
+    <video id="v" autoplay loop playsinline src="qybyha.mov"></video>
+  </div>
+  <div id="gif-box">
+    <img src="ryba.gif" alt="ryba" class="gif-overlay">
+  </div>
 
   <script>
     const v = document.getElementById('v');
+    const player = document.getElementById('player');
+    const gifBox = document.getElementById('gif-box');
 
     v.volume = 1;
     v.muted = false;
@@ -104,9 +137,126 @@
     }, 50);
 
     window.addEventListener('contextmenu', e => e.preventDefault());
+
+    let isDvd = false;
+    let dvdAnimId = null;
+    let x = 0;
+    let y = 0;
+    let vx = 8;
+    let vy = 8;
+
+    let gx = 0;
+    let gy = 0;
+    let gvx = 7;
+    let gvy = 9;
+
+    function toggleDvd() {
+      isDvd = !isDvd;
+      if (isDvd) {
+        player.classList.add('dvd');
+        gifBox.classList.add('dvd');
+
+        const pw = player.offsetWidth;
+        const ph = player.offsetHeight;
+        x = Math.max(0, Math.floor((window.innerWidth - pw) / 2));
+        y = Math.max(0, Math.floor((window.innerHeight - ph) / 2));
+        vx = (Math.random() > 0.5 ? 1 : -1) * 8;
+        vy = (Math.random() > 0.5 ? 1 : -1) * 8;
+
+        const gw = gifBox.offsetWidth;
+        const gh = gifBox.offsetHeight;
+        gx = Math.max(0, Math.floor(Math.random() * (window.innerWidth - gw)));
+        gy = Math.max(0, Math.floor(Math.random() * (window.innerHeight - gh)));
+        gvx = (Math.random() > 0.5 ? 1 : -1) * 7;
+        gvy = (Math.random() > 0.5 ? 1 : -1) * 9;
+
+        player.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        gifBox.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+        startDvd();
+      } else {
+        player.classList.remove('dvd');
+        gifBox.classList.remove('dvd');
+        player.style.transform = '';
+        gifBox.style.transform = '';
+        if (dvdAnimId) cancelAnimationFrame(dvdAnimId);
+      }
+    }
+
+    function startDvd() {
+      function step() {
+        if (!isDvd) return;
+        const maxW = window.innerWidth;
+        const maxH = window.innerHeight;
+
+        const pw = player.offsetWidth;
+        const ph = player.offsetHeight;
+        x += vx;
+        y += vy;
+        if (x + pw >= maxW) {
+          x = maxW - pw;
+          vx = -Math.abs(vx);
+        } else if (x <= 0) {
+          x = 0;
+          vx = Math.abs(vx);
+        }
+        if (y + ph >= maxH) {
+          y = maxH - ph;
+          vy = -Math.abs(vy);
+        } else if (y <= 0) {
+          y = 0;
+          vy = Math.abs(vy);
+        }
+        player.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+
+        const gw = gifBox.offsetWidth;
+        const gh = gifBox.offsetHeight;
+        gx += gvx;
+        gy += gvy;
+        if (gx + gw >= maxW) {
+          gx = maxW - gw;
+          gvx = -Math.abs(gvx);
+        } else if (gx <= 0) {
+          gx = 0;
+          gvx = Math.abs(gvx);
+        }
+        if (gy + gh >= maxH) {
+          gy = maxH - gh;
+          gvy = -Math.abs(gvy);
+        } else if (gy <= 0) {
+          gy = 0;
+          gvy = Math.abs(gvy);
+        }
+        gifBox.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+
+        dvdAnimId = requestAnimationFrame(step);
+      }
+      dvdAnimId = requestAnimationFrame(step);
+    }
+
+    let spaceTimes = [];
     window.addEventListener('keydown', e => {
       e.preventDefault();
       v.play();
+      if (e.code === 'Space' || e.key === ' ' || e.keyCode === 32) {
+        const now = Date.now();
+        spaceTimes.push(now);
+        spaceTimes = spaceTimes.filter(t => now - t < 1000);
+        if (spaceTimes.length >= 3) {
+          spaceTimes = [];
+          toggleDvd();
+        }
+      }
+    });
+
+    let tapTimes = [];
+    window.addEventListener('pointerdown', () => {
+      const now = Date.now();
+      tapTimes.push(now);
+      tapTimes = tapTimes.filter(t => now - t < 800);
+      if (tapTimes.length >= 3) {
+        tapTimes = [];
+        toggleDvd();
+      }
     });
   </script>
 </body>
