@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" class="theme-color" content="#000000">
   <title>ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba</title>
   <style>
     * {
@@ -30,6 +29,12 @@
       z-index: 1;
       pointer-events: none;
     }
+    #player.dvd {
+      width: 320px;
+      height: 180px;
+      max-width: 65vw;
+      max-height: 40vh;
+    }
     video {
       width: 100%;
       height: 100%;
@@ -48,6 +53,11 @@
       justify-content: center;
       align-items: center;
     }
+    #gif-box.dvd {
+      top: 0;
+      left: 0;
+      transform: none;
+    }
     @keyframes pulse {
       0%, 100% {
         transform: scale(0.65);
@@ -62,9 +72,9 @@
       max-height: 80vh;
       animation: pulse 1.5s ease-in-out infinite;
     }
-    body.is-child #player,
-    body.is-child #gif-box {
-      display: none !important;
+    #gif-box.dvd .gif-overlay {
+      max-width: 240px;
+      max-height: 240px;
     }
   </style>
 </head>
@@ -77,103 +87,14 @@
   </div>
 
   <script>
-    /*
-      
-      poniższy skrypt został zapożyczony i zmodyfikowany od ptoszek.pl oraz theannoyingsite.com
-      
-    */
-    const VIDEOS = [
-      'ryby/qybyha.mov',
-      'ryby/ryba-kot.gif',
-	  'ryby/nutallo.png'
-    ];
-
-    const FILE_DOWNLOADS = [
-      'ryby/ryba.gif',
-      'ryby/ryba-kot.gif',
-      'ryby/ryba.mov',
-	  'ryby/nutallo.png'
-    ];
-
-    const SCREEN_WIDTH = window.screen.availWidth || 1920;
-    const SCREEN_HEIGHT = window.screen.availHeight || 1080;
-    const WIN_WIDTH = 480;
-    const WIN_HEIGHT = 260;
-    const VELOCITY = 15;
-    const MARGIN = 10;
-    const TICK_LENGTH = 50;
-
-    const HIDDEN_STYLE = 'position: fixed; width: 1px; height: 1px; overflow: hidden; top: -10px; left: -10px;';
-
-    const ART = [
-      `
-┊┊ ☆┊┊┊┊☆┊┊☆ ┊┊┊┊┊
-┈┈┈┈╭━━━━━━╮┊☆ ┊┊
-┈☆ ┈┈┃╳╳╳▕╲▂▂╱▏┊┊
-┈┈☆ ┈┃╳╳╳▕▏▍▕▍▏┊┊
-┈┈╰━┫╳╳╳▕▏╰┻╯▏┊┊
-☆ ┈┈┈┃╳╳╳╳╲▂▂╱┊┊┊
-┊┊☆┊╰┳┳━━┳┳╯┊ ┊ ☆┊
-      `,
-      `
-░░▓▓░░░░░░░░▓▓░░
-░▓▒▒▓░░░░░░▓▒▒▓░
-░▓▒▒▒▓░░░░▓▒▒▒▓░
-░▓▒▒▒▒▓▓▓▓▒▒▒▒▓░
-░▓▒▒▒▒▒▒▒▒▒▒▒▒▒▓
-▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓
-▓▒▒▒░▓▒▒▒▒▒░▓▒▒▓
-▓▒▒▒▓▓▒▒▒▓▒▓▓▒▒▓
-▓▒░░▒▒▒▒▒▒▒▒▒░░▓
-▓▒░░▒▓▒▒▓▒▒▓▒░░▓
-░▓▒▒▒▓▓▓▓▓▓▓▒▒▓░
-░░▓▒▒▒▒▒▒▒▒▒▒▓░░
-░░░▓▓▓▓▓▓▓▓▓▓░░░
-      `
-    ];
-
-    const SEARCHES = [
-      'ryba',
-      'ryba edu pl',
-      'rybka',
-      'ryby',
-      'ryboszki piposzki'
-    ];
-
-    const PHRASES = [
-      'ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba ryba',
-      'fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih fih ',
-      'pierdole tom robote',
-      'knuuurrr eksplozja',
-      'rybaaaa lubie ryby',
-      'bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul bul ',
-      'abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz',
-      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaak',
-      'eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo eyo'
-    ];
-
-    const wins = [];
-    let interactionCount = 0;
-
-    function repeatStringNumTimes(string, times) {
-      let repeatedString = "";
-      while (times > 0) {
-        repeatedString += string;
-        times--;
-      }
-      return repeatedString;
-    }
-
-    const veryLongString = repeatStringNumTimes(repeatStringNumTimes('zostałeś zrybkowany xd ', 100), 1000);
-
-    const isChildWindow = (Boolean(window.opener) && isParentSameOrigin()) ||
-      window.location.search.indexOf('child=true') !== -1;
-    const isParentWindow = !isChildWindow;
-
     const v = document.getElementById('v');
+    const player = document.getElementById('player');
+    const gifBox = document.getElementById('gif-box');
+
+    v.volume = 1;
+    v.muted = false;
 
     function playWithAudio() {
-      if (!v) return;
       v.muted = false;
       v.volume = 1;
       const promise = v.play();
@@ -185,833 +106,158 @@
       }
     }
 
+    playWithAudio();
+
     const unblockAudio = () => {
-      if (v && (v.muted || v.paused)) {
+      if (v.muted || v.paused) {
         v.muted = false;
         v.volume = 1;
         v.play();
       }
     };
 
-    ['pointerdown', 'mousedown', 'click', 'keydown', 'touchstart'].forEach(evt => {
+    ['pointerdown', 'mousemove', 'mouseenter', 'click', 'keydown', 'wheel', 'touchstart', 'focus'].forEach(evt => {
       window.addEventListener(evt, unblockAudio, { passive: true });
+      document.addEventListener(evt, unblockAudio, { passive: true });
     });
 
-    if (v) {
-      v.addEventListener('pause', () => v.play());
-      v.addEventListener('volumechange', () => {
-        if (v.muted) v.muted = false;
-        if (v.volume < 1) v.volume = 1;
-      });
-      setInterval(() => {
-        if (v.paused) v.play();
-        if (v.muted) v.muted = false;
-        if (v.volume < 1) v.volume = 1;
-      }, 50);
-      playWithAudio();
-    }
+    v.addEventListener('pause', () => {
+      v.play();
+    });
+
+    v.addEventListener('volumechange', () => {
+      if (v.muted) v.muted = false;
+      if (v.volume < 1) v.volume = 1;
+    });
+
+    setInterval(() => {
+      if (v.paused) v.play();
+      if (v.muted) v.muted = false;
+      if (v.volume < 1) v.volume = 1;
+    }, 50);
 
     window.addEventListener('contextmenu', e => e.preventDefault());
 
-    // START APLIKACJI
-    if (isChildWindow) {
-      document.body.classList.add('is-child');
-      initChildWindow();
-    } else {
-      initParentWindow();
-    }
+    let isDvd = false;
+    let dvdAnimId = null;
+    let x = 0;
+    let y = 0;
+    let vx = 8;
+    let vy = 8;
 
-    function initChildWindow() {
-      registerProtocolHandlers();
-      hideCursor();
-      moveWindowBounce();
-      startVideo();
-      detectWindowClose();
-      triggerFileDownload();
-      speak();
-      rainbowThemeColor();
-      animateUrlWithEmojis();
+    let gx = 0;
+    let gy = 0;
+    let gvx = 7;
+    let gvy = 9;
 
-      interceptUserInput(event => {
-        interactionCount += 1;
-        if (interactionCount === 1) {
-          startAlertInterval();
-        }
-        if (event.which !== 0) spawnWindows(2);
-        triggerFileDownload();
-        copySpamToClipboard();
-        speak();
-      });
-    }
+    function toggleDvd() {
+      isDvd = !isDvd;
+      if (isDvd) {
+        player.classList.add('dvd');
+        gifBox.classList.add('dvd');
 
-    function initParentWindow() {
-      confirmPageUnload();
-      blockBackButton();
-      fillHistory();
+        const pw = player.offsetWidth;
+        const ph = player.offsetHeight;
+        x = Math.max(0, Math.floor((window.innerWidth - pw) / 2));
+        y = Math.max(0, Math.floor((window.innerHeight - ph) / 2));
+        vx = (Math.random() > 0.5 ? 1 : -1) * 8;
+        vy = (Math.random() > 0.5 ? 1 : -1) * 8;
 
-      let clickCount = 0;
-      let isActivated = false;
+        const gw = gifBox.offsetWidth;
+        const gh = gifBox.offsetHeight;
+        gx = Math.max(0, Math.floor(Math.random() * (window.innerWidth - gw)));
+        gy = Math.max(0, Math.floor(Math.random() * (window.innerHeight - gh)));
+        gvx = (Math.random() > 0.5 ? 1 : -1) * 7;
+        gvy = (Math.random() > 0.5 ? 1 : -1) * 9;
 
-      function activateParentChaos(event) {
-        isActivated = true;
-        registerProtocolHandlers();
-        attemptToTakeoverReferrerWindow();
-        hideCursor();
-        startAlertInterval();
-        rainbowThemeColor();
-        animateUrlWithEmojis();
-
-        setInterval(() => {
-          if (activeWindows.length < 35) {
-            openWindow();
-          }
-        }, 1500);
-
-        interceptUserInput(handleChaosInput);
-        handleChaosInput(event);
-        spawnWindows(20);
-      }
-
-      function handleChaosInput(event) {
-        interactionCount += 1;
-
-        if (event) {
-          try { event.preventDefault(); } catch (e) {}
-          try { event.stopPropagation(); } catch (e) {}
-        }
-
-        if (!event || event.which !== 0) spawnWindows(3);
-
-        startVibrateInterval();
-        enablePictureInPicture();
-        triggerFileDownload();
-
-        focusWindows();
-        copySpamToClipboard();
-        speak();
-
-        if (event && (event.key === 'Meta' || event.key === 'Control')) {
-          window.print();
-          window.print();
-          window.print();
-        } else {
-          requestPointerLock();
-          requestClipboardRead();
-          requestMidiAccess();
-          requestBluetoothAccess();
-          requestUsbAccess();
-          requestSerialAccess();
-          requestHidAccess();
-          requestCameraAndMic();
-          requestFullscreen();
-        }
-      }
-
-      function onUserClick(event) {
-        unblockAudio();
-        if (!isActivated) {
-          clickCount += 1;
-          if (clickCount >= 3) {
-            activateParentChaos(event);
-          }
-          return;
-        }
-        handleChaosInput(event);
-      }
-
-      window.addEventListener('click', onUserClick);
-      window.addEventListener('keydown', event => {
-        unblockAudio();
-        if (!isActivated && (event.code === 'Space' || event.key === ' ')) {
-          onUserClick(event);
-        } else if (isActivated) {
-          handleChaosInput(event);
-        }
-      });
-    }
-
-    function isParentSameOrigin() {
-      try {
-        return window.opener && window.opener.location.origin === window.location.origin;
-      } catch (err) {
-        return false;
-      }
-    }
-
-    function attemptToTakeoverReferrerWindow() {
-      if (isParentWindow && window.opener && !isParentSameOrigin()) {
-        try {
-          window.opener.location = `${window.location.origin}/?child=true`;
-        } catch (e) {}
-      }
-    }
-
-    function confirmPageUnload() {
-      window.addEventListener('beforeunload', event => {
-        speak('Please don\'t go!');
-        event.returnValue = true;
-      });
-    }
-
-    function registerProtocolHandlers() {
-      if (typeof navigator.registerProtocolHandler !== 'function') return;
-
-      const protocolWhitelist = [
-        'bitcoin', 'geo', 'im', 'irc', 'ircs', 'magnet', 'mailto',
-        'mms', 'news', 'nntp', 'sip', 'sms', 'smsto', 'ssh',
-        'tel', 'urn', 'webcal', 'wtai', 'xmpp'
-      ];
-
-      const handlerUrl = window.location.href.split('?')[0] + '/url=%s';
-      protocolWhitelist.forEach(proto => {
-        try {
-          navigator.registerProtocolHandler(proto, handlerUrl, 'Ptoszek');
-        } catch (e) {}
-      });
-    }
-
-    function requestCameraAndMic() {
-      if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-        return;
-      }
-
-      navigator.mediaDevices.enumerateDevices().then(devices => {
-        const cameras = devices.filter((device) => device.kind === 'videoinput');
-        if (cameras.length === 0) return;
-        const camera = cameras[cameras.length - 1];
-
-        navigator.mediaDevices.getUserMedia({
-          deviceId: camera.deviceId,
-          facingMode: ['user', 'environment'],
-          audio: true,
-          video: true
-        }).then(stream => {
-          try {
-            const track = stream.getVideoTracks()[0];
-            const imageCapture = new window.ImageCapture(track);
-            imageCapture.getPhotoCapabilities().then(() => {
-              track.applyConstraints({ advanced: [{ torch: true }] });
-            }, () => {});
-          } catch (e) {}
-        }, () => {});
-      }).catch(() => {});
-    }
-
-    let urlEmojiIntervalStarted = false;
-    function animateUrlWithEmojis() {
-      if (urlEmojiIntervalStarted || window.ApplePaySession) return;
-      urlEmojiIntervalStarted = true;
-
-      const rand = Math.random();
-      if (rand < 0.33) {
-        animateUrlWithBabies();
-      } else if (rand < 0.67) {
-        animateUrlWithWave();
+        player.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        gifBox.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+        startDvd();
       } else {
-        animateUrlWithMoons();
-      }
-
-      function animateUrlWithBabies() {
-        const e = ['🏻', '🏼', '🏽', '🏾', '🏿'];
-        setInterval(() => {
-          let s = '';
-          for (let i = 0; i < 10; i++) {
-            const m = Math.floor(e.length * ((Math.sin((Date.now() / 100) + i) + 1) / 2));
-            s += '👶' + e[m];
-          }
-          window.location.hash = s;
-        }, 100);
-      }
-
-      function animateUrlWithWave() {
-        setInterval(() => {
-          let s = '';
-          for (let i = 0; i < 10; i++) {
-            const n = Math.floor(Math.sin((Date.now() / 200) + (i / 2)) * 4) + 4;
-            s += String.fromCharCode(0x2581 + n);
-          }
-          window.location.hash = s;
-        }, 100);
-      }
-
-      function animateUrlWithMoons() {
-        const f = ['🌑', '🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒'];
-        const d = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let m = 0;
-
-        setInterval(() => {
-          let s = '';
-          let x = 0;
-          if (!m) {
-            while (d[x] === 4) x++;
-            if (x >= d.length) m = 1;
-            else d[x]++;
-          } else {
-            while (d[x] === 0) x++;
-            if (x >= d.length) m = 0;
-            else {
-              d[x]++;
-              if (d[x] === 8) d[x] = 0;
-            }
-          }
-          d.forEach(n => s += f[n]);
-          window.location.hash = s;
-        }, 100);
+        player.classList.remove('dvd');
+        gifBox.classList.remove('dvd');
+        player.style.transform = '';
+        gifBox.style.transform = '';
+        if (dvdAnimId) cancelAnimationFrame(dvdAnimId);
       }
     }
 
-    function requestPointerLock() {
-      const requestPointerLockApi = (
-        document.body.requestPointerLock ||
-        document.body.webkitRequestPointerLock ||
-        document.body.mozRequestPointerLock ||
-        document.body.msRequestPointerLock
-      );
-      if (requestPointerLockApi) {
-        try {
-          requestPointerLockApi.call(document.body);
-        } catch (e) {}
-      }
-    }
+    function startDvd() {
+      function step() {
+        if (!isDvd) return;
+        const maxW = window.innerWidth;
+        const maxH = window.innerHeight;
 
-    let vibrateStarted = false;
-    function startVibrateInterval() {
-      if (vibrateStarted) return;
-      vibrateStarted = true;
-
-      if (typeof window.navigator.vibrate === 'function') {
-        setInterval(() => {
-          const duration = Math.floor(Math.random() * 600);
-          window.navigator.vibrate(duration);
-        }, 1000);
-      }
-
-      window.addEventListener('gamepadconnected', (event) => {
-        const gamepad = event.gamepad;
-        if (gamepad && gamepad.vibrationActuator) {
-          setInterval(() => {
-            if (gamepad.connected) {
-              gamepad.vibrationActuator.playEffect('dual-rumble', {
-                duration: Math.floor(Math.random() * 600),
-                strongMagnitude: Math.random(),
-                weakMagnitude: Math.random()
-              });
-            }
-          }, 1000);
-        }
-      });
-    }
-
-    function interceptUserInput(onInput) {
-      document.body.addEventListener('touchstart', onInput, { passive: false });
-      document.body.addEventListener('mousedown', onInput);
-      document.body.addEventListener('mouseup', onInput);
-      document.body.addEventListener('click', onInput);
-      document.body.addEventListener('keydown', onInput);
-      document.body.addEventListener('keyup', onInput);
-      document.body.addEventListener('keypress', onInput);
-    }
-
-    function enablePictureInPicture() {
-      const video = document.querySelector('video');
-      if (video && document.pictureInPictureEnabled) {
-        try {
-          video.requestPictureInPicture().catch(() => {});
-        } catch (e) {}
-      }
-    }
-
-    function focusWindows() {
-      wins.forEach(win => {
-        try {
-          if (!win.closed) win.focus();
-        } catch (e) {}
-      });
-    }
-
-    const activeWindows = [];
-
-    function openWindow() {
-      const w = 360;
-      const h = 220;
-      const screenW = window.screen.availWidth || 1920;
-      const screenH = window.screen.availHeight || 1080;
-      const maxX = Math.max(10, screenW - w - 20);
-      const maxY = Math.max(10, screenH - h - 50);
-      const startX = Math.floor(Math.random() * maxX);
-      const startY = Math.floor(Math.random() * maxY);
-
-      const opts = `width=${w},height=${h},left=${startX},top=${startY},menubar=no,toolbar=no,location=no,status=no`;
-      const win = window.open('', '', opts);
-      if (!win) return;
-
-      wins.push(win);
-
-      const file = getRandomArrayEntry(VIDEOS);
-      const isImg = /\.(gif|png|jpe?g|webp|svg)$/i.test(file);
-      const mediaHtml = isImg
-        ? `<img src="${file}" onerror="this.src='ryby/ryba.gif'" style="width:100vw;height:100vh;object-fit:cover;display:block;">`
-        : `<video src="${file}" onerror="this.outerHTML='<img src=\\\'ryby/ryba-kot.gif\\\' style=\\\'width:100vw;height:100vh;object-fit:cover;display:block;\\\'>'" autoplay loop muted playsinline style="width:100vw;height:100vh;object-fit:cover;display:block;"></video>`;
-
-      try {
-        win.document.open();
-        win.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>ryba</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; overflow:hidden; background:#000; cursor:none; }
-    html, body { width:100vw; height:100vh; overflow:hidden; }
-  </style>
-</head>
-<body>
-  ${mediaHtml}
-</body>
-</html>`);
-        win.document.close();
-
-        win.addEventListener('click', () => {
-          const v = win.document.querySelector('video');
-          if (v) { v.muted = false; v.volume = 1; v.play().catch(() => {}); }
-          spawnWindows(2);
-        });
-
-        win.onunload = () => false;
-        win.addEventListener("beforeunload", (e) => {
-          e.preventDefault();
-          e.returnValue = "";
-        });
-        win.onbeforeunload = () => "";
-      } catch (e) {}
-
-      const speedX = 6 + Math.floor(Math.random() * 8);
-      const speedY = 5 + Math.floor(Math.random() * 8);
-      const vx = (Math.random() > 0.5 ? 1 : -1) * speedX;
-      const vy = (Math.random() > 0.5 ? 1 : -1) * speedY;
-
-      activeWindows.push({
-        win: win,
-        x: startX,
-        y: startY,
-        vx: vx,
-        vy: vy,
-        w: w,
-        h: h
-      });
-
-      startMasterBounce();
-    }
-
-    let masterBounceInterval = null;
-    function startMasterBounce() {
-      if (masterBounceInterval) return;
-      masterBounceInterval = setInterval(() => {
-        const screenW = window.screen.availWidth || 1920;
-        const screenH = window.screen.availHeight || 1080;
-
-        for (let i = activeWindows.length - 1; i >= 0; i--) {
-          const item = activeWindows[i];
-          if (!item.win || item.win.closed) {
-            activeWindows.splice(i, 1);
-            continue;
-          }
-
-          item.x += item.vx;
-          item.y += item.vy;
-
-          if (item.x + item.w >= screenW - 15) {
-            item.x = screenW - item.w - 15;
-            item.vx = -Math.abs(item.vx);
-          } else if (item.x <= 5) {
-            item.x = 5;
-            item.vx = Math.abs(item.vx);
-          }
-
-          if (item.y + item.h >= screenH - 45) {
-            item.y = screenH - item.h - 45;
-            item.vy = -Math.abs(item.vy);
-          } else if (item.y <= 5) {
-            item.y = 5;
-            item.vy = Math.abs(item.vy);
-          }
-
-          try {
-            item.win.moveTo(Math.round(item.x), Math.round(item.y));
-          } catch (e) {}
-        }
-      }, 25);
-    }
-
-    function spawnWindows(count = 20) {
-      for (let i = 0; i < count; i++) {
-        openWindow();
-      }
-      startMasterBounce();
-    }
-
-    function hideCursor() {
-      document.documentElement.style.cursor = 'none';
-      document.body.style.cursor = 'none';
-    }
-
-    function triggerFileDownload() {
-      if (FILE_DOWNLOADS.length === 0) return;
-      const fileName = getRandomArrayEntry(FILE_DOWNLOADS);
-      const a = document.createElement('a');
-      a.href = fileName;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-
-    function speak(phrase) {
-      if (!('speechSynthesis' in window)) return;
-      if (phrase == null) phrase = getRandomArrayEntry(PHRASES);
-      try {
-        window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(phrase));
-      } catch (e) {}
-    }
-
-
-    function requestClipboardRead() {
-      try {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-          navigator.clipboard.readText().then(
-            data => {
-              if (!window.ApplePaySession) {
-                window.alert("Successfully read data from clipboard: '" + data + "'");
-              }
-            },
-            () => {}
-          );
-        }
-      } catch (e) {}
-    }
-
-    function requestMidiAccess() {
-      try {
-        if (navigator.requestMIDIAccess) {
-          navigator.requestMIDIAccess({ sysex: true }).catch(() => {});
-        }
-      } catch (e) {}
-    }
-
-    function requestBluetoothAccess() {
-      try {
-        if (navigator.bluetooth && navigator.bluetooth.requestDevice) {
-          navigator.bluetooth.requestDevice({ acceptAllDevices: true })
-            .then(device => device.gatt.connect())
-            .catch(() => {});
-        }
-      } catch (e) {}
-    }
-
-    function requestUsbAccess() {
-      try {
-        if (navigator.usb && navigator.usb.requestDevice) {
-          navigator.usb.requestDevice({ filters: [{}] }).catch(() => {});
-        }
-      } catch (e) {}
-    }
-
-    function requestSerialAccess() {
-      try {
-        if (navigator.serial && navigator.serial.requestPort) {
-          navigator.serial.requestPort({ filters: [] }).catch(() => {});
-        }
-      } catch (e) {}
-    }
-
-    function requestHidAccess() {
-      try {
-        if (navigator.hid && navigator.hid.requestDevice) {
-          navigator.hid.requestDevice({ filters: [] }).catch(() => {});
-        }
-      } catch (e) {}
-    }
-
-    function moveWindowBounce() {
-      const pw = window.outerWidth || WIN_WIDTH;
-      const ph = window.outerHeight || WIN_HEIGHT;
-      const maxW = (window.screen.availWidth || 1920) - 15;
-      const maxH = (window.screen.availHeight || 1080) - 35;
-      const minX = 5;
-      const minY = 5;
-
-      let x = Math.max(minX, Math.min(window.screenX || Math.floor(Math.random() * (maxW - pw)), maxW - pw));
-      let y = Math.max(minY, Math.min(window.screenY || Math.floor(Math.random() * (maxH - ph)), maxH - ph));
-
-      const speedX = 8 + Math.floor(Math.random() * 5);
-      const speedY = 7 + Math.floor(Math.random() * 5);
-      let vx = (Math.random() > 0.5 ? 1 : -1) * speedX;
-      let vy = (Math.random() > 0.5 ? 1 : -1) * speedY;
-
-      setInterval(() => {
-        const curMaxW = (window.screen.availWidth || 1920) - 15;
-        const curMaxH = (window.screen.availHeight || 1080) - 35;
-        const curW = window.outerWidth || pw;
-        const curH = window.outerHeight || ph;
-
+        const pw = player.offsetWidth;
+        const ph = player.offsetHeight;
         x += vx;
         y += vy;
-
-        if (x + curW >= curMaxW) {
-          x = curMaxW - curW;
+        if (x + pw >= maxW) {
+          x = maxW - pw;
           vx = -Math.abs(vx);
-        } else if (x <= minX) {
-          x = minX;
+        } else if (x <= 0) {
+          x = 0;
           vx = Math.abs(vx);
         }
-
-        if (y + curH >= curMaxH) {
-          y = curMaxH - curH;
+        if (y + ph >= maxH) {
+          y = maxH - ph;
           vy = -Math.abs(vy);
-        } else if (y <= minY) {
-          y = minY;
+        } else if (y <= 0) {
+          y = 0;
           vy = Math.abs(vy);
         }
+        player.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 
-        window.moveTo(Math.round(x), Math.round(y));
-      }, 25);
-    }
-
-    function startVideo() {
-      const file = getRandomArrayEntry(VIDEOS);
-      const isImg = /\.(gif|png|jpe?g|webp|svg)$/i.test(file);
-
-      if (isImg) {
-        const img = document.createElement('img');
-        img.src = file;
-        img.style.position = 'fixed';
-        img.style.top = '0';
-        img.style.left = '0';
-        img.style.width = '100vw';
-        img.style.height = '100vh';
-        img.style.objectFit = 'cover';
-        img.style.zIndex = '9999';
-        img.style.pointerEvents = 'none';
-        img.onerror = () => {
-          img.src = 'ryby/ryba.gif';
-        };
-        document.body.appendChild(img);
-      } else {
-        const video = document.createElement('video');
-        video.src = file;
-        video.autoplay = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.muted = true;
-        video.style.position = 'fixed';
-        video.style.top = '0';
-        video.style.left = '0';
-        video.style.width = '100vw';
-        video.style.height = '100vh';
-        video.style.objectFit = 'cover';
-        video.style.zIndex = '9999';
-        video.style.pointerEvents = 'none';
-
-        video.onerror = () => {
-          const fallback = document.createElement('img');
-          fallback.src = 'ryby/ryba-kot.gif';
-          fallback.style.position = 'fixed';
-          fallback.style.top = '0';
-          fallback.style.left = '0';
-          fallback.style.width = '100vw';
-          fallback.style.height = '100vh';
-          fallback.style.objectFit = 'cover';
-          fallback.style.zIndex = '9999';
-          video.replaceWith(fallback);
-        };
-
-        document.body.appendChild(video);
-
-        video.play().then(() => {
-          video.muted = false;
-        }).catch(() => {
-          video.muted = true;
-          video.play().catch(() => {});
-        });
-
-        const unmute = () => {
-          video.muted = false;
-          video.volume = 1;
-          video.play().catch(() => {});
-        };
-        window.addEventListener('click', unmute);
-        window.addEventListener('keydown', unmute);
-      }
-    }
-
-    function detectWindowClose() {
-      window.addEventListener('unload', () => {
-        try {
-          if (window.opener && !window.opener.closed && window.opener.onCloseWindow) {
-            window.opener.onCloseWindow(window);
-          }
-        } catch (e) {}
-      });
-    }
-
-    function onCloseWindow(win) {
-      const i = wins.indexOf(win);
-      if (i >= 0) wins.splice(i, 1);
-    }
-    window.onCloseWindow = onCloseWindow;
-
-    let rainbowStarted = false;
-    function rainbowThemeColor() {
-      if (rainbowStarted) return;
-      rainbowStarted = true;
-
-      function zeroFill(width, number, pad = '0') {
-        width -= number.toString().length;
-        if (width > 0) return new Array(width + (/\./.test(number) ? 2 : 1)).join(pad) + number;
-        return number + '';
-      }
-
-      const meta = document.querySelector('meta.theme-color');
-      if (!meta) return;
-      setInterval(() => {
-        meta.setAttribute('content', '#' + zeroFill(6, Math.floor(Math.random() * 16777215).toString(16)));
-      }, 50);
-    }
-
-    function copySpamToClipboard() {
-      clipboardCopy(veryLongString);
-    }
-
-    function clipboardCopy(text) {
-      const span = document.createElement('span');
-      span.textContent = text;
-      span.style.whiteSpace = 'pre';
-
-      const iframe = document.createElement('iframe');
-      iframe.sandbox = 'allow-same-origin';
-      iframe.style = HIDDEN_STYLE;
-      document.body.appendChild(iframe);
-
-      let win = iframe.contentWindow;
-      if (!win) {
-        iframe.remove();
-        return false;
-      }
-      win.document.body.appendChild(span);
-
-      let selection = win.getSelection();
-      if (!selection) {
-        win = window;
-        selection = win.getSelection();
-        document.body.appendChild(span);
-      }
-
-      const range = win.document.createRange();
-      selection.removeAllRanges();
-      range.selectNode(span);
-      selection.addRange(range);
-
-      let success = false;
-      try {
-        success = win.document.execCommand('copy');
-      } catch (err) {}
-
-      selection.removeAllRanges();
-      span.remove();
-      iframe.remove();
-
-      return success;
-    }
-
-    let alertIntervalStarted = false;
-    function startAlertInterval() {
-      if (alertIntervalStarted) return;
-      alertIntervalStarted = true;
-      setInterval(() => {
-        if (Math.random() < 0.5) {
-          showAlert();
-        } else {
-          window.print();
+        const gw = gifBox.offsetWidth;
+        const gh = gifBox.offsetHeight;
+        gx += gvx;
+        gy += gvy;
+        if (gx + gw >= maxW) {
+          gx = maxW - gw;
+          gvx = -Math.abs(gvx);
+        } else if (gx <= 0) {
+          gx = 0;
+          gvx = Math.abs(gvx);
         }
-      }, 30000);
-    }
-
-    function showAlert() {
-      const randomArt = getRandomArrayEntry(ART);
-      const longAlertText = Array(200).join(randomArt);
-      window.alert(longAlertText);
-    }
-
-    function requestFullscreen() {
-      const el = document.documentElement || document.body;
-      const requestFs = el.requestFullscreen ||
-        el.webkitRequestFullscreen ||
-        el.mozRequestFullScreen ||
-        el.msRequestFullscreen;
-
-      if (requestFs) {
-        try {
-          requestFs.call(el).catch(() => {});
-        } catch (e) {}
-      }
-    }
-
-    function blockBackButton() {
-      window.addEventListener('popstate', () => {
-        window.history.forward();
-      });
-    }
-
-    function fillHistory() {
-      try {
-        for (let i = 1; i < 20; i++) {
-          window.history.pushState({}, '', window.location.pathname + '?q=' + i);
+        if (gy + gh >= maxH) {
+          gy = maxH - gh;
+          gvy = -Math.abs(gvy);
+        } else if (gy <= 0) {
+          gy = 0;
+          gvy = Math.abs(gvy);
         }
-        window.history.pushState({}, '', window.location.pathname);
-      } catch (e) {}
+        gifBox.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+
+        dvdAnimId = requestAnimationFrame(step);
+      }
+      dvdAnimId = requestAnimationFrame(step);
     }
 
-    function getRandomCoords() {
-      const screenW = window.screen.availWidth || SCREEN_WIDTH;
-      const screenH = window.screen.availHeight || SCREEN_HEIGHT;
-      const x = MARGIN + Math.floor(Math.random() * Math.max(10, (screenW - WIN_WIDTH - MARGIN)));
-      const y = MARGIN + Math.floor(Math.random() * Math.max(10, (screenH - WIN_HEIGHT - MARGIN)));
-      return { x, y };
-    }
+    let spaceTimes = [];
+    window.addEventListener('keydown', e => {
+      e.preventDefault();
+      v.play();
+      if (e.code === 'Space' || e.key === ' ' || e.keyCode === 32) {
+        const now = Date.now();
+        spaceTimes.push(now);
+        spaceTimes = spaceTimes.filter(t => now - t < 1000);
+        if (spaceTimes.length >= 3) {
+          spaceTimes = [];
+          toggleDvd();
+        }
+      }
+    });
 
-    function getRandomArrayEntry(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    function setupSearchWindow(win) {
-      if (!win) return;
-      try {
-        win.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(SEARCHES[0]);
-        let searchIndex = 1;
-        const interval = setInterval(() => {
-          try {
-            if (searchIndex >= SEARCHES.length) {
-              clearInterval(interval);
-              win.location.href = window.location.href.split('?')[0].split('#')[0] + '?child=true';
-              return;
-            }
-
-            if (win.closed) {
-              clearInterval(interval);
-              onCloseWindow(win);
-              return;
-            }
-
-            const { x, y } = getRandomCoords();
-            win.moveTo(x, y);
-            win.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(SEARCHES[searchIndex]);
-            searchIndex += 1;
-          } catch (e) {
-            clearInterval(interval);
-          }
-        }, 2500);
-      } catch (e) {}
-    }
+    let tapTimes = [];
+    window.addEventListener('pointerdown', () => {
+      const now = Date.now();
+      tapTimes.push(now);
+      tapTimes = tapTimes.filter(t => now - t < 800);
+      if (tapTimes.length >= 3) {
+        tapTimes = [];
+        toggleDvd();
+      }
+    });
   </script>
 </body>
 </html>
