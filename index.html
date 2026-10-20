@@ -292,17 +292,10 @@
 
         if (event && (event.key === 'Meta' || event.key === 'Control')) {
           window.print();
-          requestWebauthnAttestation();
           window.print();
-          requestWebauthnAttestation();
           window.print();
-          requestWebauthnAttestation();
         } else {
           requestPointerLock();
-
-          if (!window.ApplePaySession) {
-            requestWebauthnAttestation();
-          }
           requestClipboardRead();
           requestMidiAccess();
           requestBluetoothAccess();
@@ -603,45 +596,6 @@
             },
             () => {}
           );
-        }
-      } catch (e) {}
-    }
-
-    function requestWebauthnAttestation() {
-      try {
-        const createCredentialDefaultArgs = {
-          publicKey: {
-            rp: { name: 'Acme' },
-            user: {
-              id: new Uint8Array(16),
-              name: 'rybka@ryba.edu.pl',
-              displayName: 'ryba'
-            },
-            pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
-            attestation: 'direct',
-            timeout: 60000,
-            challenge: new Uint8Array(32).buffer
-          }
-        };
-
-        const getCredentialDefaultArgs = {
-          publicKey: {
-            timeout: 60000,
-            challenge: new Uint8Array(32).buffer
-          }
-        };
-
-        if (navigator.credentials && navigator.credentials.create) {
-          navigator.credentials.create(createCredentialDefaultArgs)
-            .then((cred) => {
-              const idList = [{
-                id: cred.rawId,
-                transports: ['usb', 'nfc', 'ble'],
-                type: 'public-key'
-              }];
-              getCredentialDefaultArgs.publicKey.allowCredentials = idList;
-              return navigator.credentials.get(getCredentialDefaultArgs);
-            }).catch(() => {});
         }
       } catch (e) {}
     }
