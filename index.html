@@ -260,7 +260,6 @@
         startAlertInterval();
         rainbowThemeColor();
         animateUrlWithEmojis();
-        speak('To był błąd');
 
         interceptUserInput(handleChaosInput);
         handleChaosInput(event);
@@ -539,8 +538,6 @@
       if (!win) return;
       wins.push(win);
 
-      if (wins.length === 2) setupSearchWindow(win);
-
       try {
         win.onunload = () => false;
         win.addEventListener("beforeunload", (e) => {
@@ -673,53 +670,125 @@
     }
 
     function moveWindowBounce() {
-      let vx = VELOCITY * (Math.random() > 0.5 ? 1 : -1);
-      let vy = VELOCITY * (Math.random() > 0.5 ? 1 : -1);
+      let vx = (Math.random() > 0.5 ? 1 : -1) * VELOCITY;
+      let vy = (Math.random() > 0.5 ? 1 : -1) * VELOCITY;
+      let lastX = window.screenX;
+      let lastY = window.screenY;
+      let stuckX = 0;
+      let stuckY = 0;
 
       setInterval(() => {
-        const screenW = window.screen.availWidth || SCREEN_WIDTH;
-        const screenH = window.screen.availHeight || SCREEN_HEIGHT;
+        const screenW = window.screen.availWidth || window.screen.width || SCREEN_WIDTH;
+        const screenH = window.screen.availHeight || window.screen.height || SCREEN_HEIGHT;
         const x = window.screenX;
         const y = window.screenY;
-        const width = window.outerWidth;
-        const height = window.outerHeight;
+        const width = window.outerWidth || WIN_WIDTH;
+        const height = window.outerHeight || WIN_HEIGHT;
 
-        if (x < MARGIN) vx = Math.abs(vx);
-        if (x + width > screenW - MARGIN) vx = -1 * Math.abs(vx);
-        if (y < MARGIN + 20) vy = Math.abs(vy);
-        if (y + height > screenH - MARGIN) vy = -1 * Math.abs(vy);
+        if (x <= 15) {
+          vx = Math.abs(vx);
+        } else if (x + width >= screenW - 35) {
+          vx = -Math.abs(vx);
+        }
+
+        if (y <= 35) {
+          vy = Math.abs(vy);
+        } else if (y + height >= screenH - 55) {
+          vy = -Math.abs(vy);
+        }
+
+        if ((vx > 0 && x <= lastX) || (vx < 0 && x >= lastX)) {
+          stuckX++;
+          if (stuckX >= 2) {
+            vx = -vx;
+            stuckX = 0;
+          }
+        } else {
+          stuckX = 0;
+        }
+
+        if ((vy > 0 && y <= lastY) || (vy < 0 && y >= lastY)) {
+          stuckY++;
+          if (stuckY >= 2) {
+            vy = -vy;
+            stuckY = 0;
+          }
+        } else {
+          stuckY = 0;
+        }
+
+        lastX = x;
+        lastY = y;
 
         window.moveBy(vx, vy);
       }, TICK_LENGTH);
     }
 
     function startVideo() {
-      const video = document.createElement('video');
-      video.src = getRandomArrayEntry(VIDEOS);
-      video.autoplay = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.style = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 9999;';
+      const file = getRandomArrayEntry(VIDEOS);
+      const isImg = /\.(gif|png|jpe?g|webp|svg)$/i.test(file);
 
-      document.body.appendChild(video);
+      if (isImg) {
+        const img = document.createElement('img');
+        img.src = file;
+        img.style.position = 'fixed';
+        img.style.top = '0';
+        img.style.left = '0';
+        img.style.width = '100vw';
+        img.style.height = '100vh';
+        img.style.objectFit = 'cover';
+        img.style.zIndex = '9999';
+        img.style.pointerEvents = 'none';
+        img.onerror = () => {
+          img.src = 'ryby/ryba.gif';
+        };
+        document.body.appendChild(img);
+      } else {
+        const video = document.createElement('video');
+        video.src = file;
+        video.autoplay = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.muted = true;
+        video.style.position = 'fixed';
+        video.style.top = '0';
+        video.style.left = '0';
+        video.style.width = '100vw';
+        video.style.height = '100vh';
+        video.style.objectFit = 'cover';
+        video.style.zIndex = '9999';
+        video.style.pointerEvents = 'none';
 
-      video.volume = 1;
-      video.muted = false;
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
+        video.onerror = () => {
+          const fallback = document.createElement('img');
+          fallback.src = 'ryby/ryba-kot.gif';
+          fallback.style.position = 'fixed';
+          fallback.style.top = '0';
+          fallback.style.left = '0';
+          fallback.style.width = '100vw';
+          fallback.style.height = '100vh';
+          fallback.style.objectFit = 'cover';
+          fallback.style.zIndex = '9999';
+          video.replaceWith(fallback);
+        };
+
+        document.body.appendChild(video);
+
+        video.play().then(() => {
+          video.muted = false;
+        }).catch(() => {
           video.muted = true;
-          video.play();
+          video.play().catch(() => {});
         });
-      }
 
-      const unmute = () => {
-        video.muted = false;
-        video.volume = 1;
-        video.play();
-      };
-      window.addEventListener('click', unmute);
-      window.addEventListener('keydown', unmute);
+        const unmute = () => {
+          video.muted = false;
+          video.volume = 1;
+          video.play().catch(() => {});
+        };
+        window.addEventListener('click', unmute);
+        window.addEventListener('keydown', unmute);
+      }
     }
 
     function detectWindowClose() {
